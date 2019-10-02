@@ -11,7 +11,7 @@ API_TOKEN = '857758104:AAGTqSjB9tQRMMUkZlJChQLH57ExRRAUKYA'
 
 WEBHOOK_HOST = '18.220.231.158'
 WEBHOOK_PORT = 443  # 443, 80, 88 or 8443 (port need to be 'open')
-WEBHOOK_LISTEN = '18.220.231.158'  # In some VPS you may need to put here the IP addr
+WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
 
 WEBHOOK_SSL_CERT = './webhook_cert.pem'  # Path to the ssl certificate
 WEBHOOK_SSL_PRIV = './webhook_pkey.pem'  # Path to the ssl private key
