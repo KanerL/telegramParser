@@ -5,11 +5,10 @@ import time
 import telebot, os
 from telebot import types
 
-
+from conf import *
 
 
 class TGBot:
-    TOKEN = '857758104:AAGTqSjB9tQRMMUkZlJChQLH57ExRRAUKYA'
 
     knownUsers = set()#
     userStep = {}  # so they won't reset every time the bot restarts
@@ -26,26 +25,36 @@ class TGBot:
     }
 
 
-    def __init__(self, filters, urls,reg_phrase,bot):
+    def __init__(self, filters, urls,reg_phrase,bot,logger):
         self.filters = filters
         self.urls = urls
         self.parser_id = 0
         self.load_parser_id()
         self.reg_phrase = reg_phrase
-        self.bot = bot
+        self.logger = logger
+        if bot is None:
+            self.bot = telebot.TeleBot(API_TOKEN)
+            self.server = False
+        else:
+            self.bot = bot
+            self.server = True
 
     # error handling if user isn't known yet
     # (obsolete once known users are saved to file, because all users
     #   had to use the /start command and are therefore known to the bot)
     def save_known_users(self):
+        self.logger.info('Starting load known users')
         with open('known_users.txt', mode='w', encoding='utf-8') as ouf:
             for item in self.knownUsers:
                 ouf.write(f'{item}\n')
+        self.logger.info('Loaded known users')
 
     def save_user_steps(self):
+        self.logger.info('Starting load user steps ')
         with open('users_steps.txt', mode='w', encoding='utf-8') as ouf:
             for key, value in self.userStep.items():
                 ouf.write(f'{key}:{value}\n')
+        self.logger.info('Loaded user steps ')
 
     def save_parser_id(self, uid):
         self.parser_id = uid
@@ -157,7 +166,7 @@ class TGBot:
         self.load_known_users()
         self.load_user_steps()
         print(self.userStep)
-        bot = telebot.TeleBot(self.TOKEN)
+        bot = self.bot
         bot.set_update_listener(self.listener)
 
         # handle the "/start" command
@@ -167,7 +176,10 @@ class TGBot:
             if cid not in self.knownUsers:  # if user hasn't used the "/start" command yet:
                 self.set_user_step(cid,0)
                 #bot.forward_message(self.parser_id,cid,m.message_id)
-                bot.send_message(cid, "Здраствуй ,пользователь!...")
+                if CUSTOM_START != '':
+                    bot.send_message(cid,CUSTOM_START)
+                else:
+                    bot.send_message(cid, "Здраствуй ,пользователь!...")
                 command_help(m)  # show the new user the help page
             else:
                 bot.send_message(cid, "Ты уже пользовался этой коммандой!")
@@ -333,18 +345,17 @@ class TGBot:
 
         @bot.message_handler(func=lambda message: message.chat.id == self.parser_id)
         def handle_parsered_answer(m: telebot.types.Message):
-            print(m)
-            # for user in self.knownUsers:
-            #     if user != self.parser_id:
-            #         bot.forward_message(user,m.chat.id,m.message_id)
+            for user in self.knownUsers:
+                 if user != self.parser_id:
+                     bot.forward_message(user,m.chat.id,m.message_id)
         # default handler for every other text
         @bot.message_handler(func=lambda message: True, content_types=['text'])
         def command_default(m):
             # this is the standard reply to a normal message
             bot.send_message(m.chat.id, "Формат команды не ясен \"" + m.text + "\"\nПопробуйте ввести что-то из /help")
-
-        bot.remove_webhook()
-        bot.polling()
+        if not self.server:
+            bot.remove_webhook()
+            bot.polling()
 
 
 
