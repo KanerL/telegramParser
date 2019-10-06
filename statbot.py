@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import random
 import string
 import time
@@ -9,29 +12,29 @@ from conf import *
 
 
 class TGBot:
-
-    knownUsers = set()#
+    knownUsers = set()  #
     userStep = {}  # so they won't reset every time the bot restarts
     commands = {  # command description used in the "help" command
         'start': 'Начать работу с ботом',
-        'help': 'Надает информацию о командах бота',
-        'urls': 'Надает список каналов которые мониторятся ',
+        'help': 'Выдает информацию о командах бота',
+        'urls': 'Выдает список каналов которые мониторятся ',
         'urls add url,url2,url3...': 'Добавляет url1,url1,url3... в список каналов для мониторинга ',
         'urls addfile': 'Добавить каналы из файла ',
         'filters': 'Надает список фильтров для отбора сообщений ',
         'filters add filter1,filter2,filter3...': 'Добавляет filter1,filter2,filter3... в список фильтров',
         'filters addfile': 'Добавить фильтры из файла ',
-        'register_parser_account' : 'Регистрация парсера в боте(нужно вести код из консоли приложения)'
+        'filters removeall': 'Очищает списко вильтров',
+        'register_parser_account': 'Регистрация парсера в боте(нужно вести код из консоли приложения)'
     }
 
-
-    def __init__(self, filters, urls,reg_phrase,bot,logger):
+    def __init__(self, filters, urls, reg_phrase, bot, logger):
         self.filters = filters
         self.urls = urls
         self.parser_id = 0
         self.load_parser_id()
         self.reg_phrase = reg_phrase
         self.logger = logger
+        print()
         if bot is None:
             self.bot = telebot.TeleBot(API_TOKEN)
             self.server = False
@@ -94,7 +97,6 @@ class TGBot:
         if uid in self.userStep:
             return self.userStep[uid]
         else:
-
             self.knownUsers.add(uid)
             self.userStep[uid] = 0
             print(f"Step : New user detected, who hasn't used \"/start\" yet {uid}")
@@ -147,7 +149,8 @@ class TGBot:
             for item in self.urls:
                 ouf.write(f'{item}\n')
         return bad_list, good_list
-    def filters_list_processor(self,items,action='add'):
+
+    def filters_list_processor(self, items, action='add'):
         if action == 'add':
             for item in items:
                 self.filters.add(item)
@@ -162,6 +165,7 @@ class TGBot:
             for item in self.filters:
                 ouf.write(f'{item}\n')
         return items
+
     def start(self):
         self.load_known_users()
         self.load_user_steps()
@@ -174,10 +178,10 @@ class TGBot:
         def command_start(m: telebot.types.Message):
             cid = m.chat.id
             if cid not in self.knownUsers:  # if user hasn't used the "/start" command yet:
-                self.set_user_step(cid,0)
-                #bot.forward_message(self.parser_id,cid,m.message_id)
+                self.set_user_step(cid, 0)
+                # bot.forward_message(self.parser_id,cid,m.message_id)
                 if CUSTOM_START != '':
-                    bot.send_message(cid,CUSTOM_START)
+                    bot.send_message(cid, CUSTOM_START)
                 else:
                     bot.send_message(cid, "Здраствуй ,пользователь!...")
                 command_help(m)  # show the new user the help page
@@ -192,7 +196,7 @@ class TGBot:
             help_text = "Доступные команды: \n"
             for key in self.commands:  # generate help text out of the commands dictionary defined at the top
                 help_text += "/" + key + ": "
-                help_text += self.commands[key] + "\n"
+            help_text += self.commands[key] + "\n"
             bot.send_message(cid, help_text)  # send the generated help page
 
         @bot.message_handler(commands=['urls'])
@@ -214,6 +218,7 @@ class TGBot:
                     return
                 if ',' in item_str_list:
                     bad_list, good = self.url_list_processor(item_str_list.split(','))
+
                 else:
                     bad_list, good = self.url_list_processor([item_str_list])
             elif m.text.startswith('/urls remove '):
@@ -227,12 +232,13 @@ class TGBot:
                 else:
                     bad_list, good = self.url_list_processor([item_str_list], action='remove')
             elif m.text == '/urls removeall':
-                self.url_list_processor([],action='removeall')
+                self.url_list_processor([], action='removeall')
                 text += 'Список каналов был успешно очищен \n'
             elif m.text == '/urls addfile':
                 text += "Отправьте файл с каналами.(Каждый канал с новой строчки)"
                 self.set_user_step(cid, 101)
             if good:
+                bot.send_message(self.parser_id,'UPDATING_URLS')
                 if action == 'add':
                     text += 'Каналы успешно добавлены: \n'
                 elif action == 'remove':
@@ -276,11 +282,11 @@ class TGBot:
                     command_default(m)
                     return
                 if ',' in item_str_list:
-                    good = self.filters_list_processor(item_str_list.split(','),action=action)
+                    good = self.filters_list_processor(item_str_list.split(','), action=action)
                 else:
-                    good = self.filters_list_processor([item_str_list],action=action)
+                    good = self.filters_list_processor([item_str_list], action=action)
             elif m.text == '/filters removeall':
-                self.filters_list_processor([],action='removeall')
+                self.filters_list_processor([], action='removeall')
                 text += 'Список фильтров был успешно очищен \n'
             elif m.text == '/filters addfile':
                 text += "Отправьте файл с фильтрами.(Каждый фильтр с новой строчки)"
@@ -339,23 +345,22 @@ class TGBot:
             if m.text == REGISTER_CODE:
                 self.save_parser_id(cid)
                 bot.send_message(cid, 'Регистрация успешна')
-                bot.send_message(cid,self.reg_phrase)
+                bot.send_message(cid, self.reg_phrase)
             else:
                 bot.send_message(cid, 'Вы ввели неправильный код,попробуйте ещё раз используя /register_parser_account')
 
         @bot.message_handler(func=lambda message: message.chat.id == self.parser_id)
         def handle_parsered_answer(m: telebot.types.Message):
             for user in self.knownUsers:
-                 if user != self.parser_id:
-                     bot.forward_message(user,m.chat.id,m.message_id)
+                if user != self.parser_id:
+                    bot.forward_message(user, m.chat.id, m.message_id)
+
         # default handler for every other text
         @bot.message_handler(func=lambda message: True, content_types=['text'])
         def command_default(m):
             # this is the standard reply to a normal message
             bot.send_message(m.chat.id, "Формат команды не ясен \"" + m.text + "\"\nПопробуйте ввести что-то из /help")
+
         if not self.server:
             bot.remove_webhook()
             bot.polling()
-
-
-

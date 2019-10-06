@@ -1,6 +1,8 @@
+#!/usr/bin/env python
+# coding: utf8
+
 import asyncio
 import logging
-import os
 import traceback
 from logging.handlers import RotatingFileHandler
 
@@ -31,7 +33,7 @@ def load_urls(urls_file):
                 if x.startswith('t.me/') or x.startswith('t.me/joinchat/'):
                     urls.append(x.strip())
                 else:
-                    raise ValueError(f'{x} не отформатирована по виду t.me/link или t.me/joinchat/link')
+                    raise ValueError('%s not formated in this way t.me/link ,t.me/joinchat/link' % x)
     else:
         with open(urls_file, mode='w', encoding='utf-8') as ouf:
             pass
@@ -51,10 +53,12 @@ filters = load_filters(filters_filename)
 users = load_urls(urls_filename)
 tp = TeleParser(loop, api_id, api_hash, filters, users, id_file, REGISTER_PHRASE,logger)
 tp.switch_mode('bot')
+input()
 try:
-    TGBot(filters, users, REGISTER_PHRASE,logger=logger, bot=None,).start()
+    tg = TGBot(filters, users, REGISTER_PHRASE,logger=logger, bot=None).start()
 except Exception as e:
     logger.error(str(e))
     logger.error(traceback.format_exc())
-    raise Exception('PROBLEM WITH TELEGRAM BOT,CHECK LOG FILE')
-print('here')
+    print('PROBLEM WITH TELEGRAM BOT,CHECK LOG FILE')
+    input()
+    raise Exception()

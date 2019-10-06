@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import asyncio
-import os
-import random
-import string
+import logging
+import traceback
+from logging.handlers import RotatingFileHandler
 
 from TeleParser import TeleParser
 from statbot import TGBot
@@ -9,9 +12,12 @@ import time
 import flask
 import telebot
 from conf import *
-bot = telebot.TeleBot(API_TOKEN)
-app = flask.Flask(__name__)
-
+logger = logging.getLogger("Rotating Log")
+logger.setLevel(logging.ERROR)
+handler = RotatingFileHandler("log.txt", maxBytes=10000, backupCount=5)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 def load_filters(filter_file):
     if os.path.isfile(filter_file):
@@ -38,7 +44,14 @@ def load_urls(urls_file):
             pass
         urls = []
     return set(urls)
-
+try:
+    bot = telebot.TeleBot(API_TOKEN)
+    app = flask.Flask(__name__)
+except Exception as e:
+    logger.error(str(e))
+    logger.error(traceback.format_exc())
+    print('Error happened with loading of server or bot, check log file')
+    input()
 
 @app.route('/', methods=['GET', 'HEAD'])
 def index():
@@ -56,20 +69,27 @@ def webhook():
     else:
         flask.abort(403)
 
-
-bot.remove_webhook()
-time.sleep(1)
-print(WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
-bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
-                certificate=open(WEBHOOK_SSL_CERT, 'r'))
-loop = asyncio.new_event_loop()
-filters = load_filters(filters_filename)
-users = load_urls(urls_filename)
-tp = TeleParser(loop, api_id, api_hash, filters, users, id_file, REGISTER_PHRASE)
-tp.switch_mode('bot')
-tbot = TGBot(filters, users, REGISTER_PHRASE, bot=bot)
-tbot.start()
-app.run(host=WEBHOOK_LISTEN,
-        port=WEBHOOK_PORT,
-        ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV),
-        debug=True)
+try:
+    bot.remove_webhook()
+    time.sleep(1)
+    print(WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
+    bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
+                    certificate=open(WEBHOOK_SSL_CERT, 'r'))
+    loop = asyncio.new_event_loop()
+    filters = load_filters(filters_filename)
+    users = load_urls(urls_filename)
+    tp = TeleParser(loop, api_id, api_hash, filters, users, id_file, REGISTER_PHRASE,logger)
+    tp.switch_mode('bot')
+    tbot = TGBot(filters, users, REGISTER_PHRASE,logger=logger, bot=bot)
+    tbot.start()
+    try:
+        app.run(host=WEBHOOK_LISTEN,
+                port=WEBHOOK_PORT,
+                ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV))
+    except KeyboardInterrupt:
+        print('Exiting ...')
+except Exception as e:
+    logger.error(str(e))
+    logger.error(traceback.format_exc())
+    print('Error happened , check log file')
+    input()

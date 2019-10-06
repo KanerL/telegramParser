@@ -1,0 +1,33 @@
+2019-10-06 14:10:34,174 - Rotating Log - ERROR - Traceback (most recent call last):
+  File "C:\Users\kaner\PycharmProjects\telegramParser\TeleParser.py", line 103, in run_tele
+    with TelegramClient('name', self.api_id, self.api_hash,proxy=proxy, loop=loop) as client:
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\helpers.py", line 122, in _sync_enter
+    return loop.run_until_complete(self.__aenter__())
+  File "C:\Users\kaner\AppData\Local\Programs\Python\Python37-32\lib\asyncio\base_events.py", line 579, in run_until_complete
+    return future.result()
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\client\auth.py", line 641, in __aenter__
+    return await self.start()
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\client\auth.py", line 139, in _start
+    await self.connect()
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\client\telegrambaseclient.py", line 414, in connect
+    proxy=self._proxy
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\network\mtprotosender.py", line 124, in connect
+    await self._connect()
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\network\mtprotosender.py", line 203, in _connect
+    await self._connection.connect(timeout=self._connect_timeout)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\network\connection\connection.py", line 91, in connect
+    await self._connect(timeout=timeout, ssl=ssl)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telethon\network\connection\connection.py", line 68, in _connect
+    loop=self._loop
+  File "C:\Users\kaner\AppData\Local\Programs\Python\Python37-32\lib\asyncio\tasks.py", line 442, in wait_for
+    return fut.result()
+  File "C:\Users\kaner\AppData\Local\Programs\Python\Python37-32\lib\asyncio\selector_events.py", line 464, in sock_connect
+    return await fut
+  File "C:\Users\kaner\AppData\Local\Programs\Python\Python37-32\lib\asyncio\selector_events.py", line 469, in _sock_connect
+    sock.connect(address)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\socks.py", line 47, in wrapper
+    return function(*args, **kwargs)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\socks.py", line 787, in connect
+    super(socksocket, self).connect(proxy_addr)
+TypeError: str, bytes or bytearray expected, not int
+

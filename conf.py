@@ -1,5 +1,6 @@
 import random
 import string
+import traceback
 from configparser import ConfigParser
 
 
@@ -32,25 +33,28 @@ if not os.path.isfile(configfile_name):
     Config.write(cfgfile)
     cfgfile.close()
 config = ConfigParser()
-config.read('config.ini')
-
-urls_filename = config.get('FILENAMES','urls_filename')
-filters_filename = config.get('FILENAMES','filters_filename')
-id_file = config.get('FILENAMES','id_file')
-
-api_id = int(config.get('PARSER OPTIONS','api_id'))
-api_hash = config.get('PARSER OPTIONS','api_hash')
-
-REGISTER_CODE = ''
-REGISTER_PHRASE = ''.join(
-    random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(25))
-
-API_TOKEN = config.get('TELEGRAM OPTIONS','api_token')
-WEBHOOK_HOST = config.get('TELEGRAM OPTIONS','WEBHOOK_HOST')
-WEBHOOK_PORT = int(config.get('TELEGRAM OPTIONS','WEBHOOK_PORT'))
-WEBHOOK_LISTEN = config.get('TELEGRAM OPTIONS','WEBHOOK_LISTEN')  # In some VPS you may need to put here the IP addr
-WEBHOOK_SSL_CERT = config.get('TELEGRAM OPTIONS','WEBHOOK_SSL_CERT') # Path to the ssl certificate
-WEBHOOK_SSL_PRIV = config.get('TELEGRAM OPTIONS','WEBHOOK_SSL_PRIV')  # Path to the ssl private key
-CUSTOM_START = config.get('TELEGRAM OPTIONS','CUSTOM_START')
-WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
-WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
+config.read(configfile_name)
+try:
+    urls_filename = config.get('FILENAMES','urls_filename')
+    filters_filename = config.get('FILENAMES','filters_filename')
+    id_file = config.get('FILENAMES','id_file')
+    api_id = int(config.get('PARSER OPTIONS','api_id'))
+    api_hash = config.get('PARSER OPTIONS','api_hash')
+    REGISTER_CODE = ''
+    REGISTER_PHRASE = ''.join(
+        random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(25))
+    API_TOKEN = config.get('TELEGRAM OPTIONS','api_token')
+    WEBHOOK_HOST = config.get('TELEGRAM OPTIONS','WEBHOOK_HOST')
+    WEBHOOK_PORT = int(config.get('TELEGRAM OPTIONS','WEBHOOK_PORT'))
+    WEBHOOK_LISTEN = config.get('TELEGRAM OPTIONS','WEBHOOK_LISTEN')  # In some VPS you may need to put here the IP addr
+    WEBHOOK_SSL_CERT = config.get('TELEGRAM OPTIONS','WEBHOOK_SSL_CERT') # Path to the ssl certificate
+    WEBHOOK_SSL_PRIV = config.get('TELEGRAM OPTIONS','WEBHOOK_SSL_PRIV')  # Path to the ssl private key
+    CUSTOM_START = config.get('TELEGRAM OPTIONS','CUSTOM_START')
+    WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
+    WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
+except Exception as e:
+    print('Настройте ваш файл конфигурации')
+    print(str(e))
+    print(traceback.format_exc())
+    input()
+    raise Exception()
