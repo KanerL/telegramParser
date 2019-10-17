@@ -19,6 +19,9 @@ if not os.path.isfile(configfile_name):
     Config.set('FILENAMES', 'urls_filename', 'urls.txt')
     Config.set('FILENAMES', 'filters_filename', 'filters.txt')
     Config.set('FILENAMES', 'id_file', 'id_file.txt')
+    Config.add_section('PROXY')
+    Config.set('PROXY',';PROXY EXAMPLE','socks5://userproxy:password@proxy_address:port')
+    Config.set('PROXY','proxy','')
     Config.add_section('PARSER OPTIONS')
     Config.set('PARSER OPTIONS','API_ID','')
     Config.set('PARSER OPTIONS','API_HASH','')
@@ -38,6 +41,7 @@ try:
     urls_filename = config.get('FILENAMES','urls_filename')
     filters_filename = config.get('FILENAMES','filters_filename')
     id_file = config.get('FILENAMES','id_file')
+    proxyl = config.get('PROXY','proxy')
     api_id = int(config.get('PARSER OPTIONS','api_id'))
     api_hash = config.get('PARSER OPTIONS','api_hash')
     REGISTER_CODE = ''
@@ -52,6 +56,22 @@ try:
     CUSTOM_START = config.get('TELEGRAM OPTIONS','CUSTOM_START')
     WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
     WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
+#socks5://userproxy:password@proxy_address:port
+    def parse_proxy(proxy):
+        if proxy == '':
+            return None,None,None,None,None
+        type_p = proxy[:proxy.find('://')]
+        tempst = proxy[proxy.find('://')+3:]
+        user = password = None
+        if '@' in tempst:
+            try:
+                user,password = tempst[:tempst.find('@')].split(':')
+            except:
+                pass
+            tempst = tempst[tempst.find('@')+1:]
+        addres,port = tempst.split(':')
+        return type_p,user,password,addres,port
+    PROXY_TYPE,PROXY_USER,PROXY_PASS,PROXY_HOST,PROXY_PORT = parse_proxy(proxyl)
 except Exception as e:
     print('Настройте ваш файл конфигурации')
     print(str(e))

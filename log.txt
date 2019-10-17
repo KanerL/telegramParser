@@ -31,3 +31,33 @@
     super(socksocket, self).connect(proxy_addr)
 TypeError: str, bytes or bytearray expected, not int
 
+2019-10-06 14:23:46,983 - Rotating Log - ERROR - Not supported proxy scheme socks5
+2019-10-06 14:23:47,150 - Rotating Log - ERROR - Traceback (most recent call last):
+  File "C:/Users/kaner/PycharmProjects/telegramParser/main.py", line 61, in <module>
+    tg = TGBot(filters, users, REGISTER_PHRASE,logger=logger, bot=None).start()
+  File "C:\Users\kaner\PycharmProjects\telegramParser\statbot.py", line 365, in start
+    bot.remove_webhook()
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telebot\__init__.py", line 235, in remove_webhook
+    return self.set_webhook()  # No params resets webhook
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telebot\__init__.py", line 221, in set_webhook
+    return apihelper.set_webhook(self.token, url, certificate, max_connections, allowed_updates)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telebot\apihelper.py", line 155, in set_webhook
+    return _make_request(token, method_url, params=payload, files=files)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\telebot\apihelper.py", line 54, in _make_request
+    timeout=(connect_timeout, read_timeout), proxies=proxy)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\sessions.py", line 465, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\sessions.py", line 573, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\adapters.py", line 337, in send
+    conn = self.get_connection(request.url, proxies)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\adapters.py", line 245, in get_connection
+    proxy_manager = self.proxy_manager_for(proxy)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\adapters.py", line 155, in proxy_manager_for
+    **proxy_kwargs)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\packages\urllib3\poolmanager.py", line 280, in proxy_from_url
+    return ProxyManager(proxy_url=url, **kw)
+  File "C:\Users\kaner\PycharmProjects\telegramParser\venv\lib\site-packages\requests\packages\urllib3\poolmanager.py", line 231, in __init__
+    'Not supported proxy scheme %s' % proxy.scheme
+AssertionError: Not supported proxy scheme socks5
+

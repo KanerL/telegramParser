@@ -6,6 +6,8 @@ import logging
 import traceback
 from logging.handlers import RotatingFileHandler
 
+from telebot import apihelper
+
 from TeleParser import TeleParser
 from statbot import TGBot
 import time
@@ -80,8 +82,13 @@ try:
     users = load_urls(urls_filename)
     tp = TeleParser(loop, api_id, api_hash, filters, users, id_file, REGISTER_PHRASE,logger)
     tp.switch_mode('bot')
+    print('PARSER STARTED')
+    if PROXY_TYPE:
+        proxyl('PROXY_TYPE')
+        apihelper.proxy = {PROXY_TYPE: proxyl}
     tbot = TGBot(filters, users, REGISTER_PHRASE,logger=logger, bot=bot)
     tbot.start()
+    print('TGBOT STARTED')
     try:
         app.run(host=WEBHOOK_LISTEN,
                 port=WEBHOOK_PORT,

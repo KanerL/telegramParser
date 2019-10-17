@@ -4,17 +4,22 @@
 import asyncio
 import os
 import threading
+import time
 import traceback
 
+from telethon.tl.functions.channels import JoinChannelRequest
+from telethon.tl.functions.messages import ImportChatInviteRequest
+
+from conf import proxyl, PROXY_USER, PROXY_PORT, PROXY_HOST, PROXY_PASS, PROXY_TYPE
 import socks
-from telethon import TelegramClient, events,sync,connection
-from telethon.tl.types import Channel
+from telethon import TelegramClient, events, sync, connection
+from telethon.tl.types import Channel, Updates
 
 
 class TeleParser:
     id_of_urls = []
 
-    def __init__(self, loop, api_id, api_hash, filters, urls, id_file, reg_phrase,logger):
+    def __init__(self, loop, api_id, api_hash, filters, urls, id_file, reg_phrase, logger):
         self.loop = loop
         self.bot_id = 0
         self.logger = logger
@@ -29,7 +34,6 @@ class TeleParser:
         self.reg_phrase = reg_phrase
         self.load_id_of_urls()
         self.run()
-
 
     def load_id_of_urls(self):
         if os.path.isfile(self.id_file):
@@ -48,17 +52,43 @@ class TeleParser:
 
     def update_urls_id(self, client):
         asd = client.get_dialogs()
-        channels_list = {d.entity.id: f't.me/{d.entity.username}'
-                         for d in asd
-                         if d.is_channel and f't.me/{d.entity.username}' in self.urls}
+        channels_list = {}
+        for d in asd:
+            if d.is_channel and f't.me/{d.entity.username}' in self.urls:
+                channels_list[d.entity.id] = f't.me/{d.entity.username}'
         print(f'[PARSER] : {self.urls}')
+        print(f'[PARSER] : {channels_list}')
         self.logger.info(f'[PARSER] : {self.urls}')
-        for url in self.urls:
+        for url in self.urls.copy():
             if url not in channels_list.values():
                 try:
-                    channels_list[client.get_entity(url).id] = url
-                except:
+                    try:
+                        chan = client.get_entity(url)
+                    except ValueError as e:
+                        if str(e) == 'Cannot get entity from a channel (or group) that you are not part of. Join the group and retry':
+                            hash = url[url.rfind('/') + 1:]
+                            updates : Updates = client(ImportChatInviteRequest(hash))
+                            try:
+                                client.send_message(client.get_entity(self.bot_id),f'Успешно вступлено в группу {updates.chats[0].title}')
+                                continue
+                            except:
+                                client.send_message(client.get_entity(self.bot_id),f'Не удалось вступить в группу {url}')
+                                continue
+
+                        else:
+                            client.send_message(client.get_entity(self.bot_id), f'Не удалось вступить в группу {url}')
+                            continue
+                    channels_list[chan.id] = url
+                    if chan.username is None:
+                        continue
+                    client(JoinChannelRequest(chan))
+                    time.sleep(1)
+                    client.send_message(client.get_entity(self.bot_id),f'Успешно вступлено в группу {chan.title}')
+                    time.sleep(1)
+                except Exception as e:
                     pass
+                    print(str(e))
+                    print(traceback.format_exc())
         if set(channels_list) != self.id_of_urls:
             self.id_of_urls = channels_list
             self.self_save_id_urls()
@@ -91,17 +121,23 @@ class TeleParser:
             self.redirect_to = self.bot_id
 
     def run_tele(self, loop):
-        host1 = 'ivs1.tlgme.online'
-        port1 = 443
-        key = "dddd4f13d104e705ec7d933a18a89adb18"
-        host = '127.0.0.1'
-        port = 9150
-
-        proxy = (socks.SOCKS5,host,port)
-        proxy1 =(host1,port1,key)
+        kwargs = {'loop': loop}
+        if proxyl != '':
+            pr_type = None
+            if PROXY_TYPE == 'socks5':
+                pr_type = socks.SOCKS5
+            elif PROXY_TYPE == 'socks4':
+                pr_type = socks.SOCKS4
+            else:
+                pr_type = socks.HTTP
+            if PROXY_USER or PROXY_PASS:
+                proxy = (pr_type, PROXY_HOST, int(PROXY_PORT), True, PROXY_USER, PROXY_PASS)
+            else:
+                proxy = (pr_type, PROXY_HOST, int(PROXY_PORT))
+            kwargs['proxy'] = proxy
         try:
             asyncio.set_event_loop(loop)
-            with TelegramClient('name', self.api_id, self.api_hash,proxy=proxy, loop=loop) as client:
+            with TelegramClient('name', self.api_id, self.api_hash, **kwargs) as client:
                 client.send_message('me', 'Hello, myself!')
                 print(f'[PARSER] : {client.download_profile_photo("me")}')
                 self.logger.info(f'[PARSER] : {client.download_profile_photo("me")}')

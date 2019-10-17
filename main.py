@@ -6,6 +6,8 @@ import logging
 import traceback
 from logging.handlers import RotatingFileHandler
 
+from telebot import apihelper
+
 from TeleParser import TeleParser
 from statbot import TGBot
 
@@ -53,7 +55,8 @@ filters = load_filters(filters_filename)
 users = load_urls(urls_filename)
 tp = TeleParser(loop, api_id, api_hash, filters, users, id_file, REGISTER_PHRASE,logger)
 tp.switch_mode('bot')
-input()
+if PROXY_TYPE:
+    apihelper.proxy = {PROXY_TYPE:proxyl}
 try:
     tg = TGBot(filters, users, REGISTER_PHRASE,logger=logger, bot=None).start()
 except Exception as e:

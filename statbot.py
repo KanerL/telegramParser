@@ -73,6 +73,15 @@ class TGBot:
                 pass
             self.knownUsers = set()
 
+    def del_user(self, user):
+        try:
+            self.knownUsers.remove(user)
+            self.userStep.pop(user)
+        except:
+            pass
+        self.save_user_steps()
+        self.save_known_users()
+
     def load_user_steps(self):
         self.userStep = {}
         if os.path.isfile('users_steps.txt'):
@@ -238,7 +247,7 @@ class TGBot:
                 text += "Отправьте файл с каналами.(Каждый канал с новой строчки)"
                 self.set_user_step(cid, 101)
             if good:
-                bot.send_message(self.parser_id,'UPDATING_URLS')
+                bot.send_message(self.parser_id, 'UPDATING_URLS')
                 if action == 'add':
                     text += 'Каналы успешно добавлены: \n'
                 elif action == 'remove':
@@ -347,13 +356,18 @@ class TGBot:
                 bot.send_message(cid, 'Регистрация успешна')
                 bot.send_message(cid, self.reg_phrase)
             else:
-                bot.send_message(cid, 'Вы ввели неправильный код,попробуйте ещё раз используя /register_parser_account')
+                bot.send_message(cid, 'Вы ввели неправильный код,попробуйте ещё раз используя /register_parser_account]')
 
-        @bot.message_handler(func=lambda message: message.chat.id == self.parser_id)
+        @bot.message_handler(func=lambda message: message.chat.id == self.parser_id and message.forward_from_chat,
+                             content_types=["text", "photo", "video"])
         def handle_parsered_answer(m: telebot.types.Message):
-            for user in self.knownUsers:
+            for user in self.knownUsers.copy():
                 if user != self.parser_id:
-                    bot.forward_message(user, m.chat.id, m.message_id)
+                    try:
+                        bot.forward_message(user, m.chat.id, m.message_id)
+                    except Exception as e:
+                        print(str(e), user)
+                        self.del_user(user)
 
         # default handler for every other text
         @bot.message_handler(func=lambda message: True, content_types=['text'])
@@ -361,6 +375,11 @@ class TGBot:
             # this is the standard reply to a normal message
             bot.send_message(m.chat.id, "Формат команды не ясен \"" + m.text + "\"\nПопробуйте ввести что-то из /help")
 
+        @bot.message_handler(func=lambda message: message.forward_from_chat)
+        def posts_from_channels(message):
+            print(message.text)
+
         if not self.server:
+            print('NOT SERVER')
             bot.remove_webhook()
             bot.polling()
